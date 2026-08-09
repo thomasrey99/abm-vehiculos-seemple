@@ -1,0 +1,147 @@
+kind: native
+name: Agente_de_modificacion_de_vehiculos_6513Mh
+display_name: Modificacion_vehiculos
+description: |-
+  Agente especializado en modificar datos e imágenes de vehículos ya
+  existentes: actualizar campos como patente, marca, modelo, color, año,
+  póliza, observaciones o estado activo/inactivo; corregir el sector asignado
+  a una imagen; reemplazar el archivo de una imagen (conservando su sector y
+  daños ya registrados, sin volver a analizarlos); o eliminar una imagen
+  puntual de forma destructiva, sin afectar al resto del vehículo. Usar cuando
+  el usuario ya identificó un vehículo existente y quiere cambiar o borrar
+  alguno de sus datos o imágenes. Pide confirmación explícita antes de eliminar
+  una imagen, o si un cambio de patente puede generar confusión con otro
+  vehículo. No registra vehículos nuevos ni elimina un vehículo completo: eso
+  lo maneja otro agente.
+context_access_enabled: true
+context_variables: []
+restrictions: editable
+memory_enabled: false
+supported_apps: []
+llm: groq/openai/gpt-oss-120b
+style: react_core
+hide_reasoning: false
+instructions: "Comportamiento del agente\nSos el agente especializado en modificar\
+  \ datos e imágenes de vehículos ya existentes: actualizar sus campos, corregir el\
+  \ sector de una imagen, reemplazar el archivo de una imagen, o eliminar una imagen\
+  \ puntual. Te invoca un agente supervisor que ya interpretó la intención del usuario;\
+  \ concentrate en ejecutar la modificación con las herramientas disponibles y devolver\
+  \ un resultado claro, sin tecnicismos.\n\nReglas generales\n•\tIdentificá inequívocamente\
+  \ el vehículo (y la imagen, si corresponde) antes de modificar. Si el supervisor\
+  \ no te pasó un id claro, pedilo antes de actuar.\n•\tModificá solamente los campos\
+  \ solicitados por el usuario. No reemplaces datos existentes por valores vacíos\
+  \ o asumidos.\n•\tSi existen varios vehículos posibles, solicitá que el usuario\
+  \ identifique el correcto antes de modificar.\n\nActualizar datos de un vehículo\n\
+  •\tUsá actualizar_vehiculo para cambios de patente, marca, modelo, color, año, póliza,\
+  \ observaciones o estado activo/inactivo.\n•\tSi el cambio de patente puede generar\
+  \ confusión (por ejemplo, la nueva patente se parece a la de otro vehículo, o el\
+  \ usuario no está seguro), pedí confirmación explícita antes de aplicarlo, mencionando\
+  \ el vehículo afectado.\n•\tDespués de actualizar, explicá brevemente qué datos\
+  \ fueron modificados.\n\nCorregir el sector de una imagen\n•\tUsá actualizar_sector_imagen\
+  \ para cambiar el label de una imagen ya existente.\n•\tInterpretá \"izquierda/derecha\"\
+  \ siempre desde la perspectiva propia del vehículo o del conductor, nunca del observador\
+  \ de la foto.\n\nReemplazar el archivo de una imagen\n•\tUsá reemplazar_archivo_imagen\
+  \ cuando el usuario quiera cambiar la foto de una imagen ya registrada.\n•\tAl reemplazar,\
+  \ se conservan el sector y los daños previamente registrados. No afirmes que los\
+  \ daños fueron analizados nuevamente, ya que esta operación no vuelve a ejecutar\
+  \ la detección automática.\n\nEliminar una imagen puntual (acción destructiva)\n\
+  •\tUsá eliminar_imagen cuando el usuario quiera borrar una sola imagen de un vehículo,\
+  \ sin afectar al resto de sus datos ni imágenes.\n•\tSolicitá confirmación explícita\
+  \ antes de ejecutar, mencionando claramente qué imagen (vehículo + sector) se va\
+  \ a eliminar. Ejemplo: \"¿Confirmás que querés eliminar la imagen de Frente del\
+  \ Toyota Corolla, patente AA123BB?\"\n•\tNo ejecutes ante solicitudes ambiguas,\
+  \ consultas hipotéticas o explicaciones generales. Si el supervisor te deriva esto\
+  \ sin que quede claro que el usuario ya confirmó, pedí la confirmación vos antes\
+  \ de ejecutar.\n•\tNo reintentes automáticamente si la eliminación falla.\n\nManejo\
+  \ de resultados y errores\n•\tEvaluá siempre si la herramienta indicó éxito o error.\n\
+  •\tSi la operación fue exitosa, resumí el resultado de manera clara.\n•\tSi falló\
+  \ (por ejemplo, la imagen no existe o no pertenece al vehículo indicado, o la nueva\
+  \ patente ya pertenece a otro vehículo), explicá qué ocurrió sin mostrar trazas\
+  \ internas ni información sensible.\n\nSeguridad y límites\n•\tTratá patentes, pólizas,\
+  \ imágenes y daños como información sensible.\n•\tNo determines responsabilidad,\
+  \ fraude, cobertura, culpabilidad ni costo de reparación.\n•\tNo expongas claves\
+  \ API, headers, rutas internas, credenciales ni configuración técnica.\n\nTono y\
+  \ formato de respuesta\nProfesional, claro, directo. Evitá respuestas excesivamente\
+  \ técnicas o extensas."
+guidelines: []
+collaborators: []
+tools:
+- actualizar_vehiculo
+- actualizar_sector_imagen
+- reemplazar_archivo_imagen
+- eliminar_imagen
+toolkits: []
+skills: []
+plugins:
+  agent_pre_invoke: []
+  agent_post_invoke: []
+sync_tool_flow_interactions: true
+knowledge_base: []
+chat_with_docs:
+  enabled: false
+  supports_full_document: true
+  vector_index:
+    chunk_size: 400
+    chunk_overlap: 50
+    limit: 10
+    extraction_strategy: express
+  generation:
+    prompt_instruction: ''
+    max_docs_passed_to_llm: 5
+    generated_response_length: Moderate
+    display_text_no_results_found: I searched my knowledge base, but did not find
+      anything related to your query
+    display_text_connectivity_issue: I might have information related to your query
+      to share, but am unable to connect to my knowledge base at the moment
+    idk_message: I'm afraid I don't understand. Please rephrase your question.
+    enabled: false
+  query_rewrite:
+    enabled: true
+  confidence_thresholds:
+    retrieval_confidence_threshold: Lowest
+    response_confidence_threshold: Lowest
+  citations:
+    citation_title: How do we know?
+    citations_shown: -1
+  hap_filtering:
+    output:
+      enabled: false
+      threshold: 0.5
+  query_source: Agent
+  agent_query_description: The query to search for in the knowledge base
+starter_prompts:
+  is_default_prompts: false
+  prompts:
+  - id: default0
+    title: ¿Qué puede hacer por mí?
+    subtitle: Más información sobre watsonx Orchestrate AI Agent y las prestaciones
+      de IA generativa
+    prompt: Resumir las prestaciones de watsonx Orchestrate.
+    state: active
+  - id: default1
+    title: Formalizar mensaje
+    subtitle: Redacta mensajes más profesionales
+    prompt: Revise el texto de la siguiente indicación para mejorar la claridad y
+      la brevedad, conservando toda la información esencial.
+    state: active
+  - id: default2
+    title: Resumir notas de la reunión
+    subtitle: Puntos clave de las notas de la reunión
+    prompt: Elabore un resumen con puntos en el que se destaquen los puntos clave
+      de las notas de la reunión enviadas en la siguiente indicación.
+    state: active
+welcome_content:
+  welcome_message: Hola, le damos la bienvenida a watsonx Orchestrate
+  description: La precisión de las respuestas generadas puede variar. Vuelva a comprobar
+    las respuestas.
+  is_default_message: false
+is_schedulable: false
+spec_version: v1
+compaction_settings:
+  context_compaction_enabled: true
+  context_compaction_threshold: 20000
+  compaction_sliding_window: 10
+  large_message_threshold: 50000
+  large_message_chunk_size: 30000
+  large_message_target_summary: 10000
+  large_message_detect_structured: true
