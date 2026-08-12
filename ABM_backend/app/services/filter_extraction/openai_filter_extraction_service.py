@@ -93,8 +93,8 @@ def _build_system_prompt() -> str:
         "el texto menciona una ubicación puntual). Elegí el ENUM más "
         "cercano según esta guía:\n"
         f"{label_lines}\n\n"
-        "- detail_type: TIPO de daño mencionado. El usuario casi nunca "
-        "va a usar el nombre técnico exacto del enum (va a decir "
+        "- detail_type: TIPO PUNTUAL de daño mencionado. El usuario casi "
+        "nunca va a usar el nombre técnico exacto del enum (va a decir "
         "'hundimiento', 'choque', 'golpe', etc. en vez de 'ABOLLADURA'). "
         "Elegí SIEMPRE el ENUM MÁS ESPECÍFICO posible según esta guía de "
         "sinónimos, aunque la palabra exacta del usuario no aparezca "
@@ -102,15 +102,29 @@ def _build_system_prompt() -> str:
         "recurso, cuando el daño mencionado genuinamente no encaje en "
         "ninguna categoría más específica — NUNCA lo uses solo porque "
         "la palabra exacta no está en la guía, primero evaluá cuál "
-        "categoría describe mejor el daño:\n"
+        "categoría describe mejor el daño. Dejalo en null si el usuario "
+        "NO menciona ningún tipo puntual de daño (por ejemplo, si solo "
+        "dice 'con daños', 'dañado', 'con algún daño', sin especificar "
+        "cuál):\n"
         f"{detail_lines}\n\n"
+        "- has_damage: true cuando el usuario pide vehículos con daños de "
+        "forma GENÉRICA, sin especificar cuál (ej. 'con daños', "
+        "'dañados', 'que tengan algún daño registrado'). Dejalo en null "
+        "si no menciona daños en absoluto, o si ya especificó un tipo "
+        "puntual (en ese caso `detail_type` alcanza y no hace falta "
+        "setear `has_damage`).\n\n"
         "Ejemplos:\n"
-        "- 'choque atrás' → label=ATRAS, detail_type=CHOQUE (NO 'OTRO').\n"
-        "- 'rayón en la puerta' → detail_type=RAYON.\n"
-        "- 'auto con un hundimiento en el lateral' → detail_type=ABOLLADURA.\n\n"
-        "Si el texto menciona un daño pero no un sector, dejá `label` en "
-        "null y completá solo `detail_type`. Si menciona un sector pero "
-        "ningún daño, dejá `detail_type` en null."
+        "- 'choque atrás' → label=ATRAS, detail_type=CHOQUE, "
+        "has_damage=null (NO 'OTRO').\n"
+        "- 'rayón en la puerta' → detail_type=RAYON, has_damage=null.\n"
+        "- 'auto con un hundimiento en el lateral' → "
+        "detail_type=ABOLLADURA, has_damage=null.\n"
+        "- 'vehículos con daños registrados en la parte trasera' → "
+        "label=ATRAS, detail_type=null, has_damage=true.\n"
+        "- 'autos dañados' → detail_type=null, has_damage=true.\n\n"
+        "Si el texto menciona un daño (puntual o genérico) pero no un "
+        "sector, dejá `label` en null. Si menciona un sector pero ningún "
+        "daño, dejá `detail_type` y `has_damage` en null."
     )
 
 
@@ -127,10 +141,11 @@ _FILTER_SCHEMA = {
             "insurance_policy": {"type": ["string", "null"]},
             "label": {"type": ["string", "null"]},
             "detail_type": {"type": ["string", "null"]},
+            "has_damage": {"type": ["boolean", "null"]},
         },
         "required": [
             "license_plate", "brand", "model", "color", "year",
-            "insurance_policy", "label", "detail_type",
+            "insurance_policy", "label", "detail_type", "has_damage",
         ],
         "additionalProperties": False,
     },
@@ -194,6 +209,7 @@ class OpenAIFilterExtractionService(FilterExtractionService):
                 insurance_policy=parsed.get("insurance_policy"),
                 label=label,
                 detail_type=detail_type,
+                has_damage=parsed.get("has_damage"),
             )
 
         except Exception:

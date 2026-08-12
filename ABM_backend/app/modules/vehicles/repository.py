@@ -183,7 +183,7 @@ class VehicleRepository:
                 )
             )
 
-        if filters.label or filters.detail_type:
+        if filters.label or filters.detail_type or filters.has_damage:
             image_stmt = select(VehicleImage.id).where(
                 VehicleImage.vehicle_id == Vehicle.id
             )
@@ -197,6 +197,14 @@ class VehicleRepository:
                 image_stmt = image_stmt.join(
                     ImageDetail, ImageDetail.image_id == VehicleImage.id
                 ).where(ImageDetail.detail_type == filters.detail_type)
+            elif filters.has_damage:
+                # No se pidió un tipo puntual de daño, pero sí que exista
+                # ALGUNO registrado (ej. "daños en la parte trasera"). Sin
+                # este join, una imagen sin ningún ImageDetail igual
+                # matchearía por el solo hecho de tener el label correcto.
+                image_stmt = image_stmt.join(
+                    ImageDetail, ImageDetail.image_id == VehicleImage.id
+                )
 
             conditions.append(image_stmt.exists())
 

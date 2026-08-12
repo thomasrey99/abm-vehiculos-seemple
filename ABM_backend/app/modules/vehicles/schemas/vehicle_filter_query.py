@@ -21,3 +21,13 @@ class VehicleFilterQuery(BaseModel):
     insurance_policy: str | None = None
     label: ImageLabel | None = None
     detail_type: ImageDetailType | None = None
+    has_damage: bool | None = None
+    """
+    True cuando el usuario pidió "vehículos con daños" (o similar) de
+    forma GENÉRICA, sin especificar un tipo puntual (choque, rayón,
+    etc.). Distinto de `detail_type`, que ya implica esta condición
+    cuando está presente. Se usa para que, combinado con `label`, la
+    búsqueda exija que exista una imagen de ese sector con AL MENOS UN
+    daño registrado, en vez de devolver cualquier imagen de ese sector
+    tenga o no daños.
+    """
